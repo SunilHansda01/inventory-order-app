@@ -1,4 +1,4 @@
-import inspect
+
 import os
 import time
 from decimal import Decimal
@@ -13,9 +13,20 @@ from .database import Base, engine, get_db
 
 app = FastAPI(title="Inventory & Order Management System", version="1.0.0")
 
-frontend_origin = os.getenv("FRONTEND_ORIGIN", "http://localhost:3000")
+frontend_origin = os.getenv(
+    "FRONTEND_ORIGIN",
+    "http://localhost:5173,https://inventory-order-manager.netlify.app"
+)
+
 allow_origins = [origin.strip() for origin in frontend_origin.split(",") if origin.strip()]
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allow_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.on_event("startup") #Helps me to load or create the database tables when the application starts. This ensures that the necessary tables are available before handling any requests.
@@ -28,13 +39,13 @@ def startup_event():
     inspector = inspect(engine)
     print("DB tables in public schema:", inspector.get_table_names(schema="public"))
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allow_origins or ["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=allow_origins or ["*"],
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
 
 
 @app.get("/health")
